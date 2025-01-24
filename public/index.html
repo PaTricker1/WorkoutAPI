@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Log</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+
+        input, select {
+            width: 95%;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Responsive design for small screens */
+        @media (max-width: 768px) {
+            th, td {
+                font-size: 12px;
+                padding: 5px;
+            }
+
+            input, select {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h2 style="text-align: center;">Workout Log</h2>
+
+    <div class="button-container">
+        <label for="rowCount">Enter number of rows: </label>
+        <input type="number" id="rowCount" value="4" min="1" />
+        <button onclick="generateTable()">Generate Table</button>
+        <button onclick="sendDataToDatabase()">Send to Database</button>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table id="workoutTable"></table>
+    </div> 
+
+    <script>
+        // List of predefined exercises
+        const predefinedExercises = [
+            "Bench",
+            "Bench dumbells",
+            "Seated push",
+            "Chest fly",
+            "Triceps pushdown",
+            "Seated dip",
+            "Lateral raise",
+            "Shoulder press",
+            "Pullup",
+            "Pulldown",
+            "Lat row",
+            "Bent over row",
+            "Cable curl",
+            "Front raise",
+            "Rear delt raise",
+            "Squat",
+            "Quad extension",
+            "Ham curl",
+            "Calf raise",
+            "Hip abduction",
+            "Hip adduction",
+            "Deadlift",
+            "Dip"
+        ];
+
+        // Function to generate the table dynamically
+        function generateTable() {
+            const rowCount = document.getElementById('rowCount').value;
+            const table = document.getElementById('workoutTable');
+            table.innerHTML = '';  // Clear existing table content
+
+            // Table header
+            const header = document.createElement('tr');
+            const headers = [
+                'Date', 'Exercise Name', 'Rep1', 'Weight1', 'Rep2', 'Weight2',
+                'Rep3', 'Weight3', 'Rep4', 'Weight4'
+            ];
+            for (let headerText of headers) {
+                const th = document.createElement('th');
+                th.innerText = headerText;
+                header.appendChild(th);
+            }
+            table.appendChild(header);
+
+            // Table rows
+            for (let i = 0; i < rowCount; i++) {
+                const row = document.createElement('tr');
+
+                // Add a date cell with current date for each row
+                const dateCell = document.createElement('td');
+                const dateInput = document.createElement('input');
+                dateInput.type = 'date';
+                dateInput.value = new Date().toISOString().split('T')[0];
+                dateCell.appendChild(dateInput);
+                row.appendChild(dateCell);
+
+                // Add dropdown for predefined exercises
+                const exerciseCell = document.createElement('td');
+                const exerciseSelect = document.createElement('select');
+                predefinedExercises.forEach(exercise => {
+                    const option = document.createElement('option');
+                    option.value = exercise;
+                    option.textContent = exercise;
+                    exerciseSelect.appendChild(option);
+                });
+                exerciseCell.appendChild(exerciseSelect);
+                row.appendChild(exerciseCell);
+
+                // Add input fields for the remaining columns
+                for (let j = 0; j < 8; j++) { // Remaining 8 columns
+                    const cell = document.createElement('td');
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = headers[j + 2]; // Use headers for placeholder
+                    cell.appendChild(input);
+                    row.appendChild(cell);
+                }
+
+                table.appendChild(row);
+            }
+        }
+
+        // Function to send data to the backend server
+        function sendDataToDatabase() {
+            const table = document.getElementById('workoutTable');
+            const rows = table.querySelectorAll('tr');
+            const data = [];
+
+            rows.forEach((row, index) => {
+                if (index === 0) return; // Skip header row
+                const cells = row.querySelectorAll('td input, td select');
+                const rowData = [];
+                cells.forEach(cell => rowData.push(cell.value));
+                data.push({
+                    date: rowData[0],
+                    exerciseName: rowData[1],
+                    rep1: rowData[2],
+                    weight1: rowData[3],
+                    rep2: rowData[4],
+                    weight2: rowData[5],
+                    rep3: rowData[6],
+                    weight3: rowData[7],
+                    rep4: rowData[8],
+                    weight4: rowData[9]
+                });
+            });
+
+            fetch('http://localhost:3000/api/workouts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Data successfully inserted into the database!');
+                })
+                .catch(error => {
+                    console.error('Error inserting data:', error);
+                });
+        }
+    </script>
+
+</body>
+</html>
