@@ -1,221 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workout Log with CSV Export</title>
-    <style>
-        table {
-            width: 80%;
-            border-collapse: collapse;
-            margin: 20px auto;
-        }
+DROP SCHEMA f CASCADE;
+CREATE SCHEMA f;
+SET client_encoding TO 'UTF8';
+SET DateStyle TO 'German';
 
-        th, td {
-            border: 1px solid black;
-            padding: 10px;
-            text-align: center;
-        }
+CREATE TABLE f.Sval_partie(
+id_partie SERIAL PRIMARY KEY,
+nazov_partie VARCHAR(30) NOT NULL 
+);
 
-        input {
-            width: 80%;
-        }
+CREATE TABLE f.Cvik(
+id_cvik SERIAL PRIMARY KEY,
+nazov_cviku VARCHAR(30) NOT NULL UNIQUE,
+id_partie INT NOT NULL REFERENCES f.Sval_partie(id_partie)
+);
 
-        .button-container {
-            text-align: center;
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
+CREATE TABLE f.Workouts(
+id_workout SERIAL PRIMARY KEY,
+den DATE,
+nazov_cviku VARCHAR(30) NOT NULL REFERENCES f.Cvik(nazov_cviku),
+rep1 INT DEFAULT 0,
+weight1 NUMERIC(6,2) DEFAULT 0,
+rep2 INT DEFAULT 0,
+weight2 NUMERIC(6,2) DEFAULT 0,
+rep3 INT DEFAULT 0,
+weight3 NUMERIC(6,2) DEFAULT 0,
+rep4 INT DEFAULT 0,
+weight4 NUMERIC(6,2) DEFAULT 0
+);
 
-    <h2 style="text-align: center;">Workout Log</h2>
+\COPY f.Sval_partie(nazov_partie) FROM 'C:\dsikt\SvalPartia.csv' CSV HEADER;
+\COPY f.Cvik(nazov_cviku,id_partie) FROM 'C:\dsikt\Cvik.csv' DELIMITER ';' CSV HEADER;
 
-    <div class="button-container">
-        <label for="rowCount">Enter number of rows: </label>
-        <input type="number" id="rowCount" value="4" min="1" />
-        <button onclick="generateTable()">Generate Table</button>
-        <button onclick="saveData()">Save Data</button>
-        <button onclick="loadData()">Load Data</button>
-        <button onclick="exportCSV()">Export as CSV</button>
-    </div>
 
-    <table id="workoutTable"></table>
 
-    <script>
-        // Function to generate the table dynamically
-        function generateTable() {
-            const rowCount = document.getElementById('rowCount').value;
-            const table = document.getElementById('workoutTable');
-            table.innerHTML = '';  // Clear existing table content
 
-            // Table header (10 columns as per your request)
-            const header = document.createElement('tr');
-            const headers = [
-                'Date', 'Exercise Name', 'Rep1', 'Weight1', 'Rep2', 'Weight2',
-                'Rep3', 'Weight3', 'Rep4', 'Weight4'
-            ];
-            for (let headerText of headers) {
-                const th = document.createElement('th');
-                th.innerText = headerText;
-                header.appendChild(th);
-            }
-            table.appendChild(header);
 
-            // Table rows (based on the user input for row count)
-            for (let i = 0; i < rowCount; i++) {
-                const row = document.createElement('tr');
-
-                // Add a date cell with the current date for each row
-                const dateCell = document.createElement('td');
-                const dateInput = document.createElement('input');
-                dateInput.type = 'date';
-                dateInput.value = new Date().toISOString().split('T')[0]; // current date in YYYY-MM-DD format
-                dateCell.appendChild(dateInput);
-                row.appendChild(dateCell);
-
-                // Add input fields for Exercise Name, Rep and Weight columns (8 input fields)
-                const exerciseCell = document.createElement('td');
-                const exerciseInput = document.createElement('input');
-                exerciseInput.type = 'text';
-                exerciseInput.placeholder = 'Exercise Name';
-                exerciseCell.appendChild(exerciseInput);
-                row.appendChild(exerciseCell);
-
-                // Add Rep1, Weight1, Rep2, Weight2, Rep3, Weight3, Rep4, Weight4 columns
-                for (let j = 0; j < 8; j++) {
-                    const cell = document.createElement('td');
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    if (j % 2 === 0) {
-                        input.placeholder = `Rep ${(j / 2) + 1}`;
-                    } else {
-                        input.placeholder = `Weight ${(j / 2) + 1}`;
-                    }
-                    cell.appendChild(input);
-                    row.appendChild(cell);
-                }
-
-                // Append the row to the table
-                table.appendChild(row);
-            }
-        }
-
-        // Function to save data to local storage
-        function saveData() {
-            const table = document.getElementById('workoutTable');
-            const rows = table.querySelectorAll('tr');
-            const data = [];
-            rows.forEach((row, index) => {
-                if (index === 0) return; // Skip header row
-                const cells = row.querySelectorAll('td input');
-                const rowData = [];
-                cells.forEach(cell => rowData.push(cell.value));
-                data.push(rowData);
-            });
-            localStorage.setItem('workoutData', JSON.stringify(data));
-            alert('Data saved!');
-        }
-
-        // Function to load data from local storage
-        function loadData() {
-            const data = JSON.parse(localStorage.getItem('workoutData'));
-            if (!data) {
-                alert('No saved data found.');
-                return;
-            }
-
-            const rowCount = data.length;
-            const table = document.getElementById('workoutTable');
-            table.innerHTML = ''; // Clear existing table content
-
-            // Table header (10 columns as per your request)
-            const header = document.createElement('tr');
-            const headers = [
-                'Date', 'Exercise Name', 'Rep1', 'Weight1', 'Rep2', 'Weight2',
-                'Rep3', 'Weight3', 'Rep4', 'Weight4'
-            ];
-            for (let headerText of headers) {
-                const th = document.createElement('th');
-                th.innerText = headerText;
-                header.appendChild(th);
-            }
-            table.appendChild(header);
-
-            // Populate table with saved data
-            data.forEach(rowData => {
-                const row = document.createElement('tr');
-
-                // Create date field
-                const dateCell = document.createElement('td');
-                const dateInput = document.createElement('input');
-                dateInput.type = 'date';
-                dateInput.value = rowData[0]; // Assuming date is the first element in rowData
-                dateCell.appendChild(dateInput);
-                row.appendChild(dateCell);
-
-                // Create exercise name field
-                const exerciseCell = document.createElement('td');
-                const exerciseInput = document.createElement('input');
-                exerciseInput.type = 'text';
-                exerciseInput.value = rowData[1]; // Assuming exercise name is the second element in rowData
-                exerciseCell.appendChild(exerciseInput);
-                row.appendChild(exerciseCell);
-
-                // Create rep and weight fields
-                rowData.slice(2).forEach((cellData, index) => {
-                    const cell = document.createElement('td');
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.value = cellData;
-                    cell.appendChild(input);
-                    row.appendChild(cell);
-                });
-                table.appendChild(row);
-            });
-        }
-
-        // Function to export the table data to a CSV file
-        function exportCSV() {
-            const table = document.getElementById('workoutTable');
-            const rows = table.querySelectorAll('tr');
-            const data = [];
-
-            // Get headers from the table
-            const headers = [];
-            const headerRow = rows[0];
-            const headerCells = headerRow.querySelectorAll('th');
-            headerCells.forEach(cell => headers.push(cell.innerText));
-            data.push(headers);  // Add header row to CSV data
-
-            // Get the data from the table rows
-            rows.forEach(row => {
-                const rowData = [];
-                const cells = row.querySelectorAll('td input');
-                cells.forEach(cell => rowData.push(cell.value));
-                if (rowData.length > 0) {
-                    data.push(rowData); // Add data row to CSV
-                }
-            });
-
-            // Convert data to CSV format
-            let csvContent = "";
-            data.forEach(rowArray => {
-                const row = rowArray.join(",");
-                csvContent += row + "\n";
-            });
-
-            // Create a downloadable link for the CSV file
-            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
-            const link = document.createElement('a');
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "workout_log.csv");
-            link.click();
-        }
-
-        // Initial load to check for existing data when the page is first opened
-        window.onload = loadData;
-    </script>
-
-</body>
-</html>
