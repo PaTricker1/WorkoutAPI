@@ -81,62 +81,59 @@
             "Dip"
         ];
 
-        // Function to generate the table dynamically
-        function generateTable() {
-            const rowCount = document.getElementById('rowCount').value;
-            const table = document.getElementById('workoutTable');
-            table.innerHTML = '';  // Clear existing table content
+function generateTable() {
+    const rowCount = parseInt(document.getElementById('rowCount').value);
+    const table = document.getElementById('workoutTable');
+    
+    // Check how many rows currently exist (excluding the header row)
+    const currentRowCount = table.querySelectorAll('tr').length - 1; // Subtract header row
 
-            // Table header
-            const header = document.createElement('tr');
-            const headers = [
-                'Date', 'Exercise Name', 'Rep1', 'Weight1', 'Rep2', 'Weight2',
-                'Rep3', 'Weight3', 'Rep4', 'Weight4'
-            ];
-            for (let headerText of headers) {
-                const th = document.createElement('th');
-                th.innerText = headerText;
-                header.appendChild(th);
-            }
-            table.appendChild(header);
+    // If the new row count is less than or equal to the current row count, do nothing
+    if (rowCount <= currentRowCount) {
+        return;
+    }
 
-            // Table rows
-            for (let i = 0; i < rowCount; i++) {
-                const row = document.createElement('tr');
+    // Add only the additional rows needed
+    for (let i = currentRowCount; i < rowCount; i++) {
+        const row = document.createElement('tr');
 
-                // Add a date cell with current date for each row
-                const dateCell = document.createElement('td');
-                const dateInput = document.createElement('input');
-                dateInput.type = 'date';
-                dateInput.value = new Date().toISOString().split('T')[0];
-                dateCell.appendChild(dateInput);
-                row.appendChild(dateCell);
+        // Add a date cell with current date for each new row
+        const dateCell = document.createElement('td');
+        const dateInput = document.createElement('input');
+        dateInput.type = 'date';
+        dateInput.value = new Date().toISOString().split('T')[0];
+        dateCell.appendChild(dateInput);
+        row.appendChild(dateCell);
 
-                // Add dropdown for predefined exercises
-                const exerciseCell = document.createElement('td');
-                const exerciseSelect = document.createElement('select');
-                predefinedExercises.forEach(exercise => {
-                    const option = document.createElement('option');
-                    option.value = exercise;
-                    option.textContent = exercise;
-                    exerciseSelect.appendChild(option);
-                });
-                exerciseCell.appendChild(exerciseSelect);
-                row.appendChild(exerciseCell);
+        // Add dropdown for predefined exercises
+        const exerciseCell = document.createElement('td');
+        const exerciseSelect = document.createElement('select');
+        predefinedExercises.forEach(exercise => {
+            const option = document.createElement('option');
+            option.value = exercise;
+            option.textContent = exercise;
+            exerciseSelect.appendChild(option);
+        });
+        exerciseCell.appendChild(exerciseSelect);
+        row.appendChild(exerciseCell);
 
-                // Add input fields for the remaining columns
-                for (let j = 0; j < 8; j++) { // Remaining 8 columns
-                    const cell = document.createElement('td');
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.placeholder = headers[j + 2]; // Use headers for placeholder
-                    cell.appendChild(input);
-                    row.appendChild(cell);
-                }
-
-                table.appendChild(row);
-            }
+        // Add input fields for the remaining columns
+        for (let j = 0; j < 8; j++) { // Remaining 8 columns
+            const cell = document.createElement('td');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = headers[j + 2]; // Use headers for placeholder
+            cell.appendChild(input);
+            row.appendChild(cell);
         }
+
+        // Append the new row to the table
+        table.appendChild(row);
+    }
+}
+
+// Modify the 'rowCount' input field's behavior to ensure the table adjusts dynamically
+document.getElementById('rowCount').addEventListener('change', generateTable);
 
         // Function to send data to the backend server
         function sendDataToDatabase() {
