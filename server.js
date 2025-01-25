@@ -1,96 +1,56 @@
 const express = require('express');
-const path = require('path');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 const { Pool } = require('pg');
+
 const app = express();
+const port = process.env.PORT || 3000;
 
-const PORT = process.env.PORT || 3000;
-
-// Database connection setup
+// Database connection
 const pool = new Pool({
-  connectionString: 'postgresql://my_db_z1pe_user:OEOHLH9H2tB3c616yUIOMBOLYCcV10Y7@dpg-cu9tjqjqf0us73c50580-a.oregon-postgres.render.com/my_db_z1pe',
-  ssl: {
-    rejectUnauthorized: false,
-  },
-  max: 10, // Maximum number of connections
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Timeout if connection takes longer than 2 seconds
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
 });
 
-// Log connection errors
-pool.on('error', (err, client) => {
-  console.error('Unexpected error on idle client:', err);
-});
+// List of allowed IPs
+const allowedIPs = ['192.168.1.44', '192.168.1.64']; // Replace with your device and phone IPs
 
-// Middleware
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json());
-
-// Health check endpoint
-app.get('/api/db-check', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT 1');
-    res.status(200).json({ message: 'Database connection successful!', result: result.rows });
-  } catch (err) {
-    console.error('Database connection failed:', err);
-    res.status(500).json({ error: 'Database connection failed.' });
+// Middleware to restrict access by IP
+app.use((req, res, next) => {
+  const clientIP = req.ip.replace('::ffff:', ''); // Handle IPv4-mapped IPv6 addresses
+  console.log(`Request from IP: ${clientIP}`);
+  
+  if (allowedIPs.includes(clientIP)) {
+    next(); // Allow the request
+  } else {
+    res.status(403).send('Access Denied: Unauthorized IP');
   }
 });
 
-// Insert data into database
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// Route for inserting workout data
 app.post('/api/workouts', async (req, res) => {
-  const workoutsData = req.body;
-  console.log('Received data:', workoutsData);
-
-  const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    const data = req.body;
+    console.log('Received data:', data);
 
-    for (const workout of workoutsData) {
-      const [
-        den,
-        nazov_cviku,
-        rep1,
-        weight1,
-        rep2,
-        weight2,
-        rep3,
-        weight3,
-        rep4,
-        weight4,
-      ] = workout;
-
-      console.log('Inserting workout data:', {
-        den,
-        nazov_cviku,
-        rep1,
-        weight1,
-        rep2,
-        weight2,
-        rep3,
-        weight3,
-        rep4,
-        weight4,
-      });
-
-      await client.query(
-        `INSERT INTO f.Workouts (den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-        [den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4]
+    for (const workout of data) {
+      await pool.query(
+        'INSERT INTO workouts (den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        workout
       );
     }
-
-    await client.query('COMMIT');
-    res.status(200).json({ message: 'Data successfully inserted!' });
+    res.json({ success: true, message: 'Data inserted successfully!' });
   } catch (err) {
-    await client.query('ROLLBACK');
     console.error('Error inserting data:', err);
-    res.status(500).json({ error: 'Failed to insert data.' });
-  } finally {
-    client.release();
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
