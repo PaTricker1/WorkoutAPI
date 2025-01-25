@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 const { Pool } = require('pg');
 
 const app = express();
@@ -15,6 +16,14 @@ const pool = new Pool({
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+
+// Serve static files (HTML, CSS, JS) from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve the HTML page when accessing the root URL
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html')); // Make sure the HTML file is in the 'public' folder
+});
 
 // Route for inserting workout data
 app.post('/api/workouts', async (req, res) => {
