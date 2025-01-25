@@ -34,26 +34,38 @@ app.get('/api/test-db', async (req, res) => {
 });
 
 app.post('/api/workouts', async (req, res) => {
-  const workoutsData = req.body;  // Data sent from frontend
-  const client = await pool.connect();
+    const workoutsData = req.body;  // Data sent from frontend
+    const client = await pool.connect();
 
-  try {
-    await client.query('BEGIN');
-    
-    for (const workout of workoutsData) {
-      const { den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4 } = workout;
+    try {
+        await client.query('BEGIN');
+        
+        for (const workout of workoutsData) {
+            const { den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4 } = workout;
 
-      console.log('Inserting workout data:', {
-        den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4
-      });
+            console.log('Inserting workout data:', {
+                den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4
+            });
 
-      // Insert into database
-      await client.query(
-        `INSERT INTO f.Workouts (den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-        [den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4]
-      );
+            // Insert into database
+            await client.query(
+                `INSERT INTO f.Workouts (den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                [den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4]
+            );
+        }
+        
+        await client.query('COMMIT');
+        res.status(200).json({ message: 'Data successfully inserted into the database!' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error inserting data:', error);
+        res.status(500).json({ error: 'Error inserting data into the database.' });
+    } finally {
+        client.release();
     }
+});
+
     
     await client.query('COMMIT');
     res.status(200).json({ message: 'Data successfully inserted into the database!' });
