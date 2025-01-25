@@ -163,26 +163,26 @@
             });
         }
 
+        // Function to send data to the backend
         function sendDataToDatabase() {
-  const data = previousData;
-  console.log('Sending data to the backend:', data); // Log data before sending
+            const data = previousData;
+            console.log('Sending data to the backend:', data); // Log data before sending
 
-  fetch('https://workoutapi-ul58.onrender.com/api/workouts', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-  .then(response => response.json())
-  .then(data => {
-    alert('Data successfully sent to the database!');
-  })
-  .catch(error => {
-    console.error('Error sending data:', error);
-  });
-}
-
+            fetch('https://workoutapi-ul58.onrender.com/api/workouts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Data successfully sent to the database!');
+            })
+            .catch(error => {
+                console.error('Error sending data:', error);
+            });
+        }
 
         // Initialize the table with the default row count
         generateTable();
