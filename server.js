@@ -1,50 +1,51 @@
 const express = require('express');
 const path = require('path');
-const { Pool } = require('pg'); // Import PostgreSQL client
+const { Pool } = require('pg');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-// Database connection settings (ensure DATABASE_URL is set in your environment)
+// Database connection setup
 const pool = new Pool({
-  connectionString: 'postgresql://my_db_z1pe_user:OEOHLH9H2tB3c616yUIOMBOLYCcV10Y7@dpg-cu9tjqf0us73c50580-a.oregon-postgres.render.com/my_db_z1pe', // Render sets DATABASE_URL automatically
+  connectionString: 'postgresql://my_db_z1pe_user:OEOHLH9H2tB3c616yUIOMBOLYCcV10Y7@dpg-cu9tjqjqf0us73c50580-a.oregon-postgres.render.com/my_db_z1pe',
   ssl: {
-    rejectUnauthorized: false, // For secure connections to Render-hosted PostgreSQL
+    rejectUnauthorized: false,
   },
+  max: 10, // Maximum number of connections
+  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+  connectionTimeoutMillis: 2000, // Timeout if connection takes longer than 2 seconds
 });
 
-// Middleware to serve static files and parse JSON
+// Log connection errors
+pool.on('error', (err, client) => {
+  console.error('Unexpected error on idle client:', err);
+});
+
+// Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-// Serve the index.html file at the root
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Test database connection
-app.get('/api/test-db', async (req, res) => {
+// Health check endpoint
+app.get('/api/db-check', async (req, res) => {
   try {
-    const result = await pool.query('SELECT NOW()'); // Query the current timestamp
-    res.status(200).json({ message: 'Database connected!', timestamp: result.rows[0] });
-  } catch (error) {
-    console.error('Database connection failed:', error);
-    res.status(500).json({ error: 'Failed to connect to the database.' });
+    const result = await pool.query('SELECT 1');
+    res.status(200).json({ message: 'Database connection successful!', result: result.rows });
+  } catch (err) {
+    console.error('Database connection failed:', err);
+    res.status(500).json({ error: 'Database connection failed.' });
   }
 });
 
-// Endpoint to handle workout data insertion
+// Insert data into database
 app.post('/api/workouts', async (req, res) => {
-  const workoutsData = req.body; // Data sent from frontend
-  console.log('Received data:', workoutsData); // Log received data
+  const workoutsData = req.body;
+  console.log('Received data:', workoutsData);
 
   const client = await pool.connect();
-
   try {
     await client.query('BEGIN');
 
     for (const workout of workoutsData) {
-      // Destructure array elements into variables
       const [
         den,
         nazov_cviku,
@@ -71,7 +72,6 @@ app.post('/api/workouts', async (req, res) => {
         weight4,
       });
 
-      // Insert into database
       await client.query(
         `INSERT INTO f.Workouts (den, nazov_cviku, rep1, weight1, rep2, weight2, rep3, weight3, rep4, weight4) 
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
@@ -80,11 +80,11 @@ app.post('/api/workouts', async (req, res) => {
     }
 
     await client.query('COMMIT');
-    res.status(200).json({ message: 'Data successfully inserted into the database!' });
-  } catch (error) {
+    res.status(200).json({ message: 'Data successfully inserted!' });
+  } catch (err) {
     await client.query('ROLLBACK');
-    console.error('Error inserting data:', error);
-    res.status(500).json({ error: 'Error inserting data into the database.' });
+    console.error('Error inserting data:', err);
+    res.status(500).json({ error: 'Failed to insert data.' });
   } finally {
     client.release();
   }
@@ -92,5 +92,5 @@ app.post('/api/workouts', async (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
