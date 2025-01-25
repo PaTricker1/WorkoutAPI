@@ -54,7 +54,6 @@
     </div> 
 
     <script>
-        // List of predefined exercises
         const predefinedExercises = [
             "Bench",
             "Bench dumbells",
@@ -81,15 +80,13 @@
             "Dip"
         ];
 
-        let previousData = []; // Store previous table data
+        let previousData = [];
 
-        // Function to generate the table dynamically
         function generateTable() {
             const rowCount = parseInt(document.getElementById('rowCount').value);
             const table = document.getElementById('workoutTable');
-            table.innerHTML = '';  // Clear existing table content
+            table.innerHTML = '';
 
-            // Table header
             const header = document.createElement('tr');
             const headers = [
                 'Date', 'Exercise Name', 'Rep1', 'Weight1', 'Rep2', 'Weight2',
@@ -102,23 +99,19 @@
             }
             table.appendChild(header);
 
-            // Get the data for the required number of rows
-            const data = previousData.slice(0, rowCount); // Use the first 'rowCount' entries or leave them empty
+            const data = previousData.slice(0, rowCount);
 
-            // Table rows
             for (let i = 0; i < rowCount; i++) {
                 const row = document.createElement('tr');
 
-                // Add a date cell with current date for each row
                 const dateCell = document.createElement('td');
                 const dateInput = document.createElement('input');
                 dateInput.type = 'date';
-                dateInput.value = data[i] ? data[i][0] : new Date().toISOString().split('T')[0]; // Use saved date or the current date
-                dateInput.addEventListener('input', function() { saveData(); });
+                dateInput.value = data[i] ? data[i][0] : new Date().toISOString().split('T')[0];
+                dateInput.addEventListener('input', saveData);
                 dateCell.appendChild(dateInput);
                 row.appendChild(dateCell);
 
-                // Add dropdown for predefined exercises
                 const exerciseCell = document.createElement('td');
                 const exerciseSelect = document.createElement('select');
                 predefinedExercises.forEach(exercise => {
@@ -128,18 +121,17 @@
                     exerciseSelect.appendChild(option);
                 });
                 exerciseSelect.value = data[i] ? data[i][1] : predefinedExercises[0];
-                exerciseSelect.addEventListener('change', function() { saveData(); });
+                exerciseSelect.addEventListener('change', saveData);
                 exerciseCell.appendChild(exerciseSelect);
                 row.appendChild(exerciseCell);
 
-                // Add input fields for the remaining columns
                 for (let j = 0; j < 8; j++) {
                     const cell = document.createElement('td');
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.value = data[i] ? data[i][j + 2] : '';
                     input.placeholder = headers[j + 2];
-                    input.addEventListener('input', function() { saveData(); });
+                    input.addEventListener('input', saveData);
                     cell.appendChild(input);
                     row.appendChild(cell);
                 }
@@ -148,25 +140,29 @@
             }
         }
 
-        // Function to save data instantly when anything changes in the table
         function saveData() {
             const table = document.getElementById('workoutTable');
             const rows = table.querySelectorAll('tr');
             previousData = [];
 
             rows.forEach((row, rowIndex) => {
-                if (rowIndex === 0) return; // Skip header row
+                if (rowIndex === 0) return;
                 const cells = row.querySelectorAll('td input, td select');
                 const rowData = [];
                 cells.forEach(cell => {
                     const value = cell.value.trim();
-                    rowData.push(value === "" ? "0" : value); // Replace empty string with "0"
+                    rowData.push(value === "" ? "0" : value);
                 });
                 previousData.push(rowData);
             });
         }
 
         function sendDataToDatabase() {
+            const confirmation = confirm("Are you sure you want to send the data?");
+            if (!confirmation) {
+                return;
+            }
+
             const data = previousData;
             console.log('Sending data to the backend:', data);
 
@@ -186,7 +182,6 @@
             });
         }
 
-        // Initialize the table with the default row count
         generateTable();
     </script>
 
