@@ -13,7 +13,7 @@ const pool = new Pool({
 });
 
 // List of allowed IPs
-const allowedIPs = ['192.168.1.44', '192.168.1.64']; // Replace with your device and phone IPs
+const allowedIPs = ['95.102.2.133', '192.168.1.64']; // Replace with your device and phone IPs
 
 // Middleware to restrict access by IP
 app.use((req, res, next) => {
