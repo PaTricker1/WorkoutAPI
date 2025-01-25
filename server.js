@@ -12,21 +12,6 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-// List of allowed IPs
-const allowedIPs = ['95.102.2.133', '192.168.1.64']; // Replace with your device and phone IPs
-
-// Middleware to restrict access by IP
-app.use((req, res, next) => {
-  const clientIP = req.ip.replace('::ffff:', ''); // Handle IPv4-mapped IPv6 addresses
-  console.log(`Request from IP: ${clientIP}`);
-  
-  if (allowedIPs.includes(clientIP)) {
-    next(); // Allow the request
-  } else {
-    res.status(403).send('Access Denied: Unauthorized IP');
-  }
-});
-
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
