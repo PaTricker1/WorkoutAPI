@@ -46,7 +46,7 @@
         <label for="rowCount">Enter number of rows: </label>
         <input type="number" id="rowCount" value="4" min="1" />
         <button onclick="generateTable()">Generate Table</button>
-        <button onclick="sendDataToDatabase()">Send to Database</button> <!-- New button -->
+        <button onclick="sendDataToDatabase()">Send to Database</button>
     </div>
 
     <div style="overflow-x: auto;">
@@ -114,7 +114,7 @@
                 const dateInput = document.createElement('input');
                 dateInput.type = 'date';
                 dateInput.value = data[i] ? data[i][0] : new Date().toISOString().split('T')[0]; // Use saved date or the current date
-                dateInput.addEventListener('input', function() { saveData(); }); // Save data when input is changed
+                dateInput.addEventListener('input', function() { saveData(); });
                 dateCell.appendChild(dateInput);
                 row.appendChild(dateCell);
 
@@ -127,19 +127,19 @@
                     option.textContent = exercise;
                     exerciseSelect.appendChild(option);
                 });
-                exerciseSelect.value = data[i] ? data[i][1] : predefinedExercises[0]; // Use saved exercise or the first exercise
-                exerciseSelect.addEventListener('change', function() { saveData(); }); // Save data when selection is changed
+                exerciseSelect.value = data[i] ? data[i][1] : predefinedExercises[0];
+                exerciseSelect.addEventListener('change', function() { saveData(); });
                 exerciseCell.appendChild(exerciseSelect);
                 row.appendChild(exerciseCell);
 
                 // Add input fields for the remaining columns
-                for (let j = 0; j < 8; j++) { // Remaining 8 columns
+                for (let j = 0; j < 8; j++) {
                     const cell = document.createElement('td');
                     const input = document.createElement('input');
                     input.type = 'text';
-                    input.value = data[i] ? data[i][j + 2] : ''; // Use saved data or leave blank
-                    input.placeholder = headers[j + 2]; // Use headers for placeholder
-                    input.addEventListener('input', function() { saveData(); }); // Save data when input is changed
+                    input.value = data[i] ? data[i][j + 2] : '';
+                    input.placeholder = headers[j + 2];
+                    input.addEventListener('input', function() { saveData(); });
                     cell.appendChild(input);
                     row.appendChild(cell);
                 }
@@ -158,15 +158,17 @@
                 if (rowIndex === 0) return; // Skip header row
                 const cells = row.querySelectorAll('td input, td select');
                 const rowData = [];
-                cells.forEach(cell => rowData.push(cell.value));
+                cells.forEach(cell => {
+                    const value = cell.value.trim();
+                    rowData.push(value === "" ? "0" : value); // Replace empty string with "0"
+                });
                 previousData.push(rowData);
             });
         }
 
-        // Function to send data to the backend
         function sendDataToDatabase() {
             const data = previousData;
-            console.log('Sending data to the backend:', data); // Log data before sending
+            console.log('Sending data to the backend:', data);
 
             fetch('https://workoutapi-ul58.onrender.com/api/workouts', {
                 method: 'POST',
