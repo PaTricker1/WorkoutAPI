@@ -65,6 +65,7 @@
 
         button:hover {
             background-color: #45a049;
+
         }
 
         table {
@@ -78,6 +79,7 @@
             text-align: center;
             border: 1px solid #ddd;
             font-size: 1.1em;
+            padding-right: 22px;
         }
 
         th {
@@ -113,12 +115,12 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
-
+/*
             .button-container input {
                 width: 100%;
                 margin-bottom: 10px;
             }
-
+*/
             .button-container button {
                 width: 100%;
             }
@@ -126,6 +128,10 @@
             th, td {
                 font-size: 0.9em;
                 padding: 8px;
+                padding-right: 22px;
+            }
+            .input-container{
+                flex-direction: row;
             }
         }
 
@@ -137,8 +143,10 @@
         <h2>Workout Log</h2>
 
         <div class="button-container">
-            <label for="rowCount">Enter number of rows: </label>
-            <input type="number" id="rowCount" value="4" min="1" />
+            <div class="input-container">
+                <label for="rowCount">Enter number of rows: </label>
+                <input type="number" id="rowCount" value="4" min="1" />
+            </div>
             <button onclick="generateTable()">Generate Table</button>
             <button onclick="sendDataToDatabase()">Send to Database</button>
         </div>
